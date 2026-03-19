@@ -122,20 +122,21 @@
                     </div>
                 </div>
             </div>
-        </main>
 
-        <main id="view-trade" class="view-section px-6 pt-20">
-            <div class="flex flex-col items-center justify-center text-center">
-                <div class="mb-8 p-6 bg-[#1e2329] rounded-full">
-                    <i data-lucide="arrow-left-right" class="w-12 h-12 text-gray-600"></i>
+            <div class="grid grid-cols-2 gap-3 px-4 mb-8">
+                <div class="card-bg rounded-2xl border border-gray-800 p-4">
+                    <span class="text-[9px] text-gray-400 font-black uppercase tracking-widest">Fear & Greed</span>
+                    <div class="text-3xl font-black mt-1">74</div>
+                    <span class="text-[10px] font-black text-green-400 uppercase">Greed</span>
+                    <div class="mt-2 h-1 w-full bg-gray-900 rounded-full overflow-hidden">
+                        <div class="h-full w-3/4 bg-green-500"></div>
+                    </div>
                 </div>
-                <h2 class="text-2xl font-bold mb-4">Spot Trading</h2>
-                <p class="text-gray-400 text-sm px-6 mb-12 leading-relaxed">
-                    Start trading with TrustFunded's professional spot market interface.
-                </p>
-                <button class="w-full bg-binance-yellow text-black py-4 rounded-xl font-bold text-lg active:scale-95 transition-all">
-                    Trade Now
-                </button>
+                <div class="card-bg rounded-2xl border border-gray-800 p-4 flex flex-wrap gap-1 content-start">
+                    <span class="px-2 py-0.5 rounded bg-[#0ecb81]/20 text-[#0ecb81] text-[8px] font-black border border-[#0ecb81]/40">SOLANA</span>
+                    <span class="px-2 py-0.5 rounded bg-black/40 text-gray-400 text-[8px] font-black">MEME</span>
+                    <span class="px-2 py-0.5 rounded bg-black/40 text-gray-400 text-[8px] font-black">DEFI</span>
+                </div>
             </div>
         </main>
 
@@ -181,7 +182,7 @@
                 <i data-lucide="bar-chart-2" class="w-5 h-5"></i>
                 <span class="text-[10px] font-bold">Markets</span>
             </div>
-            <div onclick="showView('trade')" id="nav-trade" class="flex flex-col items-center gap-1.5 text-gray-500 cursor-pointer">
+            <div class="flex flex-col items-center gap-1.5 text-gray-500 cursor-pointer">
                 <i data-lucide="arrow-left-right" class="w-5 h-5"></i>
                 <span class="text-[10px] font-bold">Trade</span>
             </div>
@@ -200,43 +201,36 @@
     <script>
         lucide.createIcons();
 
-        // View Switching Logic
+        // 1. View Switching Logic
         function showView(viewId) {
-            // Hide all views
             document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
-            
-            // Reset all nav colors
             document.querySelectorAll('[id^="nav-"]').forEach(n => {
                 n.classList.remove('nav-item-active');
                 n.classList.add('text-gray-500');
             });
 
-            // Show target view
             const targetView = document.getElementById('view-' + viewId);
             const targetNav = document.getElementById('nav-' + viewId);
+            const exBtn = document.getElementById('btn-exchange');
+            const waBtn = document.getElementById('btn-wallet');
+
             if(targetView) targetView.classList.add('active');
             if(targetNav) {
                 targetNav.classList.add('nav-item-active');
                 targetNav.classList.remove('text-gray-500');
             }
 
-            // Sync Top Header Buttons (Exchange/Wallet)
-            const exBtn = document.getElementById('btn-exchange');
-            const waBtn = document.getElementById('btn-wallet');
+            // Sync Header Buttons
             if(viewId === 'home') {
                 exBtn.className = "px-5 py-2 text-white bg-[#2b3139] rounded-md shadow-md font-bold transition-all";
                 waBtn.className = "px-5 py-2 text-gray-400 font-bold transition-all";
-            } else if (viewId === 'wallets') {
+            } else {
                 waBtn.className = "px-5 py-2 text-white bg-[#2b3139] rounded-md shadow-md font-bold transition-all";
                 exBtn.className = "px-5 py-2 text-gray-400 font-bold transition-all";
-            } else {
-                // Dim both if on "Trade"
-                exBtn.className = "px-5 py-2 text-gray-400 font-bold transition-all";
-                waBtn.className = "px-5 py-2 text-gray-400 font-bold transition-all";
             }
         }
 
-        // Market Data Logic
+        // 2. Market Data
         async function fetchMarket() {
             try {
                 const res = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbols=["BTCUSDT","BNBUSDT"]');
@@ -246,22 +240,19 @@
                     const price = parseFloat(coin.lastPrice).toLocaleString(undefined, { minimumFractionDigits: 2 });
                     const change = parseFloat(coin.priceChangePercent).toFixed(2);
                     
-                    const priceEl = document.getElementById(isBTC ? 'btc-price' : 'bnb-price');
-                    if(priceEl) priceEl.innerText = price;
-                    
+                    document.getElementById(isBTC ? 'btc-price' : 'bnb-price').innerText = price;
                     const changeEl = document.getElementById(isBTC ? 'btc-change' : 'bnb-change');
-                    if(changeEl) changeEl.innerText = (change >= 0 ? '+' : '') + change + '%';
+                    changeEl.innerText = (change >= 0 ? '+' : '') + change + '%';
                 });
             } catch (e) {}
         }
 
-        // Toggle Balance Logic
+        // 3. Balance Toggles
         let hidden = false;
         function toggleBalance() {
             hidden = !hidden;
             document.getElementById('home-main-balance').innerText = hidden ? "******" : "$0.00";
-            const icon = document.getElementById('home-eye-icon');
-            icon.setAttribute('data-lucide', hidden ? 'eye-off' : 'eye');
+            document.getElementById('home-eye-icon').setAttribute('data-lucide', hidden ? 'eye-off' : 'eye');
             lucide.createIcons();
         }
 
