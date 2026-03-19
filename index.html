@@ -99,7 +99,9 @@
                  style="background-image: url('https://images.unsplash.com/photo-1631603090989-93f9ef6f9d80?q=80&w=2072&auto=format&fit=crop');">
                 <div class="bg-black/40 p-4 w-full h-full backdrop-blur-[2px]">
                     <div class="flex items-center gap-2 mb-2">
-                        <img src="https://cryptologos.cc/logos/bnb-bnb-logo.png" class="w-5 h-5" />
+                        <img src="https://cdn.jsdelivr.net/gh/atomiclabs/cryptocurrency-icons@1a72df15/128/color/bnb.png" 
+                             onerror="this.style.display='none'" 
+                             class="w-5 h-5 object-contain" />
                         <span class="text-xs font-black text-white">BNB</span>
                     </div>
                     <p class="text-xl font-black leading-none mb-1 text-white" id="bnb-price">667.05</p>
@@ -113,7 +115,9 @@
                  style="background-image: url('https://images.unsplash.com/photo-1518546305927-5a555bb7020d?q=80&w=2069&auto=format&fit=crop');">
                 <div class="bg-black/40 p-4 w-full h-full backdrop-blur-[2px]">
                     <div class="flex items-center gap-2 mb-2">
-                        <img src="https://cryptologos.cc/logos/bitcoin-btc-logo.png" class="w-5 h-5" />
+                        <img src="https://cdn.jsdelivr.net/gh/atomiclabs/cryptocurrency-icons@1a72df15/128/color/btc.png" 
+                             onerror="this.style.display='none'" 
+                             class="w-5 h-5 object-contain" />
                         <span class="text-xs font-black text-white">BTC</span>
                     </div>
                     <p class="text-xl font-black leading-none mb-1 text-white" id="btc-price">72,300.45</p>
@@ -164,7 +168,7 @@
             <span class="pb-3 hover:text-gray-300 cursor-pointer">New Listing</span>
         </div>
 
-        <div class="fixed bottom-0 left-0 right-0 max-w-md mx-auto card-bg border-t border-gray-800/50 px-6 py-3 flex justify-between items-center z-50 bg-[#1e2329]">
+        <div class="fixed bottom-0 left-0 right-0 max-w-md mx-auto border-t border-gray-800/50 px-6 py-3 flex justify-between items-center z-50 bg-[#1e2329]">
             <div class="flex flex-col items-center gap-1.5 cursor-pointer">
                 <i data-lucide="home" class="w-5 h-5 binance-yellow"></i>
                 <span class="text-[10px] font-bold binance-yellow">Home</span>
@@ -224,7 +228,7 @@
             lucide.createIcons();
         });
 
-        // 3. Maintain fixed $0.00 balance
+        // 3. Update loops
         fetchMarket();
         setInterval(fetchMarket, 8000);
         setInterval(() => {
