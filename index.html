@@ -7,14 +7,16 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        body { background-color: #0b0e11; color: white; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; overflow-x: hidden; }
+        body { background-color: #0b0e11; color: white; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         .card-bg { background-color: #1e2329; background-position: center; background-size: cover; }
         .binance-yellow { color: #f0b90b; }
         .bg-binance-yellow { background-color: #f0b90b; }
         .success-green { color: #0ecb81; }
         .danger-red { color: #f6465d; }
         .tab-active { border-bottom: 3px solid #f0b90b; color: white; font-weight: 800; }
-        .nav-item-active { color: #f0b90b !important; }
+        .nav-active { color: #f0b90b !important; }
+        .sparkline { stroke-dasharray: 100; stroke-dashoffset: 100; animation: draw 2s forwards; }
+        @keyframes draw { to { stroke-dashoffset: 0; } }
         ::-webkit-scrollbar { display: none; }
         .view-section { display: none; }
         .view-section.active { display: block; }
@@ -24,14 +26,30 @@
 
     <div class="max-w-md mx-auto min-h-screen relative">
         
-        <header class="flex justify-between items-center px-4 py-4">
+        <div class="flex justify-between items-center px-4 py-4 text-xs font-medium text-gray-400">
+            <div class="flex gap-6">
+                <span class="tab-active pb-1 cursor-pointer">Spot</span>
+                <span class="cursor-pointer hover:text-white" onclick="alert('Funding view coming soon')">Funding</span>
+                <span class="cursor-pointer hover:text-white" onclick="showView('markets')">Earn</span>
+            </div>
+            <div class="flex gap-4">
+                <i data-lucide="search" class="w-4 h-4 cursor-pointer"></i>
+                <i data-lucide="scan-line" class="w-4 h-4 cursor-pointer"></i>
+                <i data-lucide="message-square-more" class="w-4 h-4 cursor-pointer"></i>
+            </div>
+        </div>
+
+        <header class="flex justify-between items-center px-4 mt-2 mb-6">
             <div class="flex gap-1 bg-[#1e2329] p-1 rounded-lg text-xs">
-                <button onclick="toggleMode('exchange')" id="btn-exchange" class="px-5 py-2 text-white bg-[#2b3139] rounded-md shadow-md font-bold transition-all">Exchange</button>
-                <button onclick="toggleMode('wallet')" id="btn-wallet" class="px-5 py-2 text-gray-400 font-bold transition-all">Wallet</button>
+                <button id="mode-ex" onclick="setMode('ex')" class="px-5 py-2 bg-[#2b3139] text-white rounded-md shadow-md font-bold transition-all">Exchange</button>
+                <button id="mode-wa" onclick="setMode('wa')" class="px-5 py-2 text-gray-400 font-bold transition-all">Wallet</button>
             </div>
             <div class="flex gap-4 text-gray-400 items-center">
-                <i data-lucide="bell" class="w-6 h-6"></i>
-                <div class="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center border border-gray-600">
+                <div class="relative">
+                    <i data-lucide="bell" class="w-6 h-6"></i>
+                    <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border-2 border-[#0b0e11]"></span>
+                </div>
+                <div class="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center border border-gray-600 cursor-pointer">
                     <i data-lucide="user" class="w-5 h-5 text-white"></i>
                 </div>
             </div>
@@ -41,7 +59,7 @@
             <section class="px-4 mb-8">
                 <div class="flex items-center gap-2 text-gray-400 text-xs mb-1">
                     <span>Total Balance (USD)</span>
-                    <i data-lucide="eye" class="w-4 h-4 cursor-pointer" id="eye-icon" onclick="toggleBalance()"></i>
+                    <i data-lucide="eye" class="w-4 h-4 cursor-pointer" id="eye-icon" onclick="toggleEye()"></i>
                 </div>
                 <div class="flex justify-between items-start">
                     <div>
@@ -51,93 +69,119 @@
                             <i data-lucide="chevron-right" class="w-3 h-3 text-gray-500"></i>
                         </p>
                     </div>
-                    <button class="bg-binance-yellow text-black px-6 py-2.5 rounded-lg font-black text-sm">Add Funds</button>
+                    <button class="bg-binance-yellow text-black px-6 py-2.5 rounded-lg font-black text-sm active:scale-95 transition-all">
+                        Add Funds
+                    </button>
                 </div>
             </section>
 
             <nav class="grid grid-cols-5 gap-2 px-4 mb-8 text-center">
-                <div class="flex flex-col items-center gap-2 cursor-pointer" onclick="alert('Convert coming soon!')">
-                    <div class="card-bg p-3.5 rounded-2xl"><i data-lucide="repeat" class="binance-yellow w-5 h-5"></i></div>
+                <div class="flex flex-col items-center gap-2 cursor-pointer" onclick="showView('trade')">
+                    <div class="card-bg p-3.5 rounded-2xl bg-[#1e2329]"><i data-lucide="repeat" class="binance-yellow w-5 h-5"></i></div>
                     <span class="text-[10px] text-gray-400 font-bold">Convert</span>
                 </div>
                 <div class="flex flex-col items-center gap-2 cursor-pointer">
-                    <div class="card-bg p-3.5 rounded-2xl"><i data-lucide="trending-up" class="binance-yellow w-5 h-5"></i></div>
-                    <span class="text-[10px] text-gray-400 font-bold">Earn</span>
+                    <div class="card-bg p-3.5 rounded-2xl bg-[#1e2329]"><i data-lucide="trending-up" class="binance-yellow w-5 h-5"></i></div>
+                    <span class="text-[10px] text-gray-400 font-bold leading-tight">Simple<br>Earn</span>
                 </div>
                 <div class="flex flex-col items-center gap-2 cursor-pointer">
-                    <div class="card-bg p-3.5 rounded-2xl"><i data-lucide="users" class="binance-yellow w-5 h-5"></i></div>
+                    <div class="card-bg p-3.5 rounded-2xl bg-[#1e2329]"><i data-lucide="users" class="binance-yellow w-5 h-5"></i></div>
                     <span class="text-[10px] text-gray-400 font-bold">Referral</span>
                 </div>
                 <div class="flex flex-col items-center gap-2 cursor-pointer">
-                    <div class="card-bg p-3.5 rounded-2xl"><i data-lucide="rocket" class="binance-yellow w-5 h-5"></i></div>
-                    <span class="text-[10px] text-gray-400 font-bold">Launch</span>
+                    <div class="card-bg p-3.5 rounded-2xl bg-[#1e2329]"><i data-lucide="rocket" class="binance-yellow w-5 h-5"></i></div>
+                    <span class="text-[10px] text-gray-400 font-bold">Launchpool</span>
                 </div>
-                <div class="flex flex-col items-center gap-2 cursor-pointer">
-                    <div class="card-bg p-3.5 rounded-2xl"><i data-lucide="layout-grid" class="binance-yellow w-5 h-5"></i></div>
+                <div class="flex flex-col items-center gap-2 cursor-pointer" onclick="alert('More features coming soon')">
+                    <div class="card-bg p-3.5 rounded-2xl bg-[#1e2329]"><i data-lucide="layout-grid" class="binance-yellow w-5 h-5"></i></div>
                     <span class="text-[10px] text-gray-400 font-bold">More</span>
                 </div>
             </nav>
 
-            <div class="px-4">
-                <h3 class="font-bold mb-4">Market Trends</h3>
-                <div class="space-y-4" id="market-list-home">
+            <div class="grid grid-cols-2 gap-3 px-4 mb-6">
+                <div class="card-bg rounded-2xl border border-gray-800/50 relative overflow-hidden group" style="background-image: url('https://images.unsplash.com/photo-1631603090989-93f9ef6f9d80?q=80&w=2072&auto=format&fit=crop');">
+                    <div class="bg-black/40 p-4 w-full h-full backdrop-blur-[2px]">
+                        <div class="flex items-center gap-2 mb-2">
+                            <img src="https://cdn.jsdelivr.net/gh/atomiclabs/cryptocurrency-icons@1a72df15/128/color/bnb.png" class="w-5 h-5" />
+                            <span class="text-xs font-black text-white">BNB</span>
+                        </div>
+                        <p class="text-xl font-black leading-none mb-1 text-white" id="bnb-price">---</p>
+                        <p class="success-green text-[10px] font-black" id="bnb-change">0.00%</p>
                     </div>
+                </div>
+                <div class="card-bg rounded-2xl border border-gray-800/50 relative overflow-hidden group" style="background-image: url('https://images.unsplash.com/photo-1518546305927-5a555bb7020d?q=80&w=2069&auto=format&fit=crop');">
+                    <div class="bg-black/40 p-4 w-full h-full backdrop-blur-[2px]">
+                        <div class="flex items-center gap-2 mb-2">
+                            <img src="https://cdn.jsdelivr.net/gh/atomiclabs/cryptocurrency-icons@1a72df15/128/color/btc.png" class="w-5 h-5" />
+                            <span class="text-xs font-black text-white">BTC</span>
+                        </div>
+                        <p class="text-xl font-black leading-none mb-1 text-white" id="btc-price">---</p>
+                        <p class="success-green text-[10px] font-black" id="btc-change">0.00%</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 px-4 mb-8">
+                <div class="card-bg rounded-2xl border border-gray-800 text-center relative overflow-hidden" style="background-image: url('https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?q=80&w=2070&auto=format&fit=crop');">
+                    <div class="bg-black/50 p-4 w-full h-full backdrop-blur-[2px]">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-[9px] text-gray-200 font-black uppercase tracking-widest">Fear & Greed</span>
+                        </div>
+                        <div class="text-4xl font-black mb-0.5 text-white" id="fng-val">--</div>
+                        <span class="text-[10px] font-black text-orange-400 uppercase tracking-tighter" id="fng-label">Loading</span>
+                    </div>
+                </div>
+
+                <div class="card-bg rounded-2xl border border-gray-800 flex flex-col justify-between overflow-hidden" style="background-image: url('https://images.unsplash.com/photo-1642790551116-18e150f248e3?q=80&w=2070&auto=format&fit=crop');">
+                    <div class="bg-black/50 p-4 w-full h-full flex flex-col justify-between backdrop-blur-[2px]">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-[9px] text-gray-200 font-black uppercase tracking-widest">Hot</span>
+                        </div>
+                        <div class="flex flex-wrap gap-1.5">
+                            <span class="px-2 py-1 rounded bg-[#0ecb81]/20 text-[#0ecb81] text-[8px] font-black border border-[#0ecb81]/40">SOLANA</span>
+                            <span class="px-2 py-1 rounded bg-black/40 text-gray-200 text-[8px] font-black border border-white/10">MEME</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </main>
 
         <main id="view-markets" class="view-section px-4">
-            <h2 class="text-2xl font-bold mb-4">Markets</h2>
-            <div class="flex gap-4 border-b border-gray-800 mb-4 text-sm text-gray-400">
-                <span class="tab-active pb-2">Favorites</span>
-                <span class="pb-2">Spot</span>
-                <span class="pb-2">Futures</span>
-            </div>
-            <div id="full-market-list" class="space-y-6">
+            <h2 class="text-2xl font-bold mb-6">Market Lists</h2>
+            <div id="market-list-container" class="space-y-4">
                 </div>
         </main>
 
-        <main id="view-trade" class="view-section px-4 text-center py-20">
-            <i data-lucide="arrow-left-right" class="w-16 h-16 mx-auto mb-4 text-gray-600"></i>
-            <h2 class="text-xl font-bold">Spot Trading</h2>
-            <p class="text-gray-400 text-sm mt-2">Connect your account to start trading crypto pairs.</p>
-            <button class="bg-binance-yellow text-black px-8 py-3 rounded-lg mt-6 font-bold">Start Trading</button>
-        </main>
-
         <main id="view-wallets" class="view-section px-4">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-xl font-bold">Wallet Overview</h2>
-                <i data-lucide="pie-chart" class="binance-yellow w-5 h-5"></i>
+            <h2 class="text-xl font-bold mb-6">Asset Overview</h2>
+            <div class="card-bg p-6 rounded-3xl border border-gray-800 mb-6 bg-gradient-to-br from-[#1e2329] to-[#0b0e11]">
+                <p class="text-gray-400 text-xs">Available Balance</p>
+                <p class="text-3xl font-bold mt-1">0.00 <span class="text-sm text-gray-400">USDT</span></p>
             </div>
-            <div class="card-bg p-6 rounded-3xl border border-gray-800 mb-6">
-                <p class="text-gray-400 text-xs">Estimated Balance</p>
-                <p class="text-3xl font-bold mt-1">0.00000000 <span class="text-sm text-gray-400">BTC</span></p>
-                <p class="text-gray-400 text-sm">≈ $0.00</p>
-            </div>
-            <div class="grid grid-cols-3 gap-2">
-                <button class="bg-gray-800 py-3 rounded-xl text-sm font-bold">Deposit</button>
-                <button class="bg-gray-800 py-3 rounded-xl text-sm font-bold">Withdraw</button>
-                <button class="bg-gray-800 py-3 rounded-xl text-sm font-bold">Transfer</button>
+            <div class="grid grid-cols-2 gap-4">
+                <button class="bg-binance-yellow text-black font-bold py-3 rounded-xl">Deposit</button>
+                <button class="bg-gray-800 font-bold py-3 rounded-xl">Withdraw</button>
             </div>
         </main>
 
-        <div class="fixed bottom-0 left-0 right-0 max-w-md mx-auto card-bg border-t border-gray-800 px-6 py-3 flex justify-between items-center z-50">
-            <div onclick="showView('home')" class="nav-btn flex flex-col items-center gap-1 cursor-pointer nav-item-active" id="nav-home">
+        <div class="fixed bottom-0 left-0 right-0 max-w-md mx-auto border-t border-gray-800/50 px-6 py-3 flex justify-between items-center z-50 bg-[#1e2329]">
+            <div id="nav-home" onclick="showView('home')" class="nav-item flex flex-col items-center gap-1.5 cursor-pointer nav-active">
                 <i data-lucide="home" class="w-5 h-5"></i>
                 <span class="text-[10px] font-bold">Home</span>
             </div>
-            <div onclick="showView('markets')" class="nav-btn flex flex-col items-center gap-1 cursor-pointer text-gray-500" id="nav-markets">
+            <div id="nav-markets" onclick="showView('markets')" class="nav-item flex flex-col items-center gap-1.5 text-gray-500 cursor-pointer">
                 <i data-lucide="bar-chart-2" class="w-5 h-5"></i>
                 <span class="text-[10px] font-bold">Markets</span>
             </div>
-            <div onclick="showView('trade')" class="nav-btn flex flex-col items-center gap-1 cursor-pointer text-gray-500" id="nav-trade">
+            <div id="nav-trade" onclick="alert('Trade panel loading...')" class="nav-item flex flex-col items-center gap-1.5 text-gray-500 cursor-pointer">
                 <i data-lucide="arrow-left-right" class="w-5 h-5"></i>
                 <span class="text-[10px] font-bold">Trade</span>
             </div>
-            <div onclick="showView('futures')" class="nav-btn flex flex-col items-center gap-1 cursor-pointer text-gray-500" id="nav-futures">
+            <div id="nav-futures" onclick="alert('Futures restricted in your region')" class="nav-item flex flex-col items-center gap-1.5 text-gray-500 cursor-pointer">
                 <i data-lucide="pie-chart" class="w-5 h-5"></i>
                 <span class="text-[10px] font-bold">Futures</span>
             </div>
-            <div onclick="showView('wallets')" class="nav-btn flex flex-col items-center gap-1 cursor-pointer text-gray-500" id="nav-wallets">
+            <div id="nav-wallets" onclick="showView('wallets')" class="nav-item flex flex-col items-center gap-1.5 text-gray-500 cursor-pointer">
                 <i data-lucide="wallet" class="w-5 h-5"></i>
                 <span class="text-[10px] font-bold">Wallets</span>
             </div>
@@ -146,93 +190,101 @@
     </div>
 
     <script>
-        // Initialize Icons
         lucide.createIcons();
+        let isHidden = false;
 
-        // 1. Navigation Logic
+        // 1. Navigation Controller
         function showView(viewId) {
-            // Hide all views
-            document.querySelectorAll('.view-section').forEach(view => view.classList.remove('active'));
-            // Deactivate all nav buttons
-            document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.classList.add('text-gray-500');
-                btn.classList.remove('nav-item-active');
+            document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => {
+                n.classList.remove('nav-active');
+                n.classList.add('text-gray-500');
             });
 
-            // Show selected view
-            const targetView = document.getElementById('view-' + viewId);
-            if(targetView) targetView.classList.add('active');
-
-            // Highlight nav button
-            const targetNav = document.getElementById('nav-' + viewId);
-            if(targetNav) {
-                targetNav.classList.remove('text-gray-500');
-                targetNav.classList.add('nav-item-active');
-            }
+            document.getElementById('view-' + viewId).classList.add('active');
+            document.getElementById('nav-' + viewId).classList.add('nav-active');
+            document.getElementById('nav-' + viewId).classList.remove('text-gray-500');
         }
 
-        // 2. Toggle Exchange vs Wallet
-        function toggleMode(mode) {
-            const exBtn = document.getElementById('btn-exchange');
-            const waBtn = document.getElementById('btn-wallet');
-            
-            if(mode === 'exchange') {
-                exBtn.className = "px-5 py-2 text-white bg-[#2b3139] rounded-md shadow-md font-bold transition-all";
-                waBtn.className = "px-5 py-2 text-gray-400 font-bold transition-all";
+        // 2. Mode Toggle (Exchange / Wallet)
+        function setMode(mode) {
+            const ex = document.getElementById('mode-ex');
+            const wa = document.getElementById('mode-wa');
+            if(mode === 'ex') {
+                ex.className = "px-5 py-2 bg-[#2b3139] text-white rounded-md shadow-md font-bold transition-all";
+                wa.className = "px-5 py-2 text-gray-400 font-bold transition-all";
+                showView('home');
             } else {
-                waBtn.className = "px-5 py-2 text-white bg-[#2b3139] rounded-md shadow-md font-bold transition-all";
-                exBtn.className = "px-5 py-2 text-gray-400 font-bold transition-all";
+                wa.className = "px-5 py-2 bg-[#2b3139] text-white rounded-md shadow-md font-bold transition-all";
+                ex.className = "px-5 py-2 text-gray-400 font-bold transition-all";
+                showView('wallets');
             }
         }
 
-        // 3. Balance Visibility
-        let isHidden = false;
-        function toggleBalance() {
+        // 3. Eye Toggle Logic
+        function toggleEye() {
             isHidden = !isHidden;
-            const bal = document.getElementById('main-balance');
+            document.getElementById('main-balance').innerText = isHidden ? "******" : "$0.00";
             const icon = document.getElementById('eye-icon');
-            bal.innerText = isHidden ? "******" : "$0.00";
             icon.setAttribute('data-lucide', isHidden ? 'eye-off' : 'eye');
             lucide.createIcons();
         }
 
-        // 4. Live Data Fetching
-        async function fetchMarketData() {
+        // 4. API Data Fetching
+        async function updateData() {
             try {
-                const res = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbols=["BTCUSDT","BNBUSDT","ETHUSDT","SOLUSDT"]');
+                // Prices
+                const res = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbols=["BTCUSDT","BNBUSDT","ETHUSDT","SOLUSDT","DOGEUSDT"]');
                 const data = await res.json();
                 
-                let html = "";
+                let marketHtml = "";
                 data.forEach(coin => {
+                    const sym = coin.symbol.replace('USDT','');
                     const price = parseFloat(coin.lastPrice).toLocaleString();
                     const change = parseFloat(coin.priceChangePercent).toFixed(2);
                     const isPos = change >= 0;
-                    const color = isPos ? 'success-green' : 'danger-red';
-                    const symbol = coin.symbol.replace('USDT', '');
-                    
-                    html += `
-                        <div class="flex justify-between items-center py-2">
+
+                    // Update Home Cards
+                    if(sym === 'BTC') {
+                        document.getElementById('btc-price').innerText = price;
+                        document.getElementById('btc-change').innerText = (isPos ? '+' : '') + change + '%';
+                    }
+                    if(sym === 'BNB') {
+                        document.getElementById('bnb-price').innerText = price;
+                        document.getElementById('bnb-change').innerText = (isPos ? '+' : '') + change + '%';
+                    }
+
+                    // Build Market List
+                    marketHtml += `
+                        <div class="flex justify-between items-center py-2 border-b border-gray-800/30">
                             <div class="flex items-center gap-3">
-                                <div class="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center font-bold text-[10px]">${symbol}</div>
-                                <div>
-                                    <p class="font-bold text-sm">${symbol}/USDT</p>
-                                    <p class="text-gray-500 text-[10px]">Vol ${parseFloat(coin.volume).toFixed(0)}</p>
-                                </div>
+                                <div class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center font-bold text-xs">${sym}</div>
+                                <div><p class="font-bold">${sym}/USDT</p><p class="text-[10px] text-gray-500">Vol ${parseFloat(coin.volume).toFixed(0)}</p></div>
                             </div>
                             <div class="text-right">
-                                <p class="font-bold text-sm">$${price}</p>
-                                <p class="${color} text-[10px] font-bold">${isPos ? '+' : ''}${change}%</p>
+                                <p class="font-bold">$${price}</p>
+                                <p class="${isPos ? 'success-green' : 'danger-red'} text-xs">${isPos ? '+' : ''}${change}%</p>
                             </div>
                         </div>
                     `;
                 });
-                document.getElementById('market-list-home').innerHTML = html;
-                document.getElementById('full-market-list').innerHTML = html;
-            } catch (e) { console.error("Update failed"); }
+                document.getElementById('market-list-container').innerHTML = marketHtml;
+
+                // Fear and Greed Index (Mocking for UI stability)
+                const fng = Math.floor(Math.random() * (75 - 20) + 20);
+                document.getElementById('fng-val').innerText = fng;
+                document.getElementById('fng-label').innerText = fng > 50 ? "Greed" : "Fear";
+                
+            } catch (e) { console.warn("API Error"); }
         }
 
-        fetchMarketData();
-        setInterval(fetchMarketData, 5000);
+        updateData();
+        setInterval(updateData, 5000);
+        
+        // Ensure $0.00 balance stays sticky
+        setInterval(() => {
+            if(!isHidden) document.getElementById('main-balance').innerText = "$0.00";
+        }, 500);
 
     </script>
 </body>
