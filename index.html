@@ -7,6 +7,8 @@
     <!-- Tailwind + Lucide Icons -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Font Awesome for login icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         /* ========= ORIGINAL LOADER STYLES (PRESERVED) ========= */
         :root {
@@ -35,8 +37,8 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 9999;
-            transition: opacity 0.8s ease-out;
+            z-index: 10000;
+            transition: opacity 0.8s ease-out, visibility 0.8s ease-out;
             background-color: var(--bg-dark);
         }
 
@@ -86,6 +88,64 @@
             }
         }
 
+        /* ========= LOGIN OVERLAY STYLES ========= */
+        #login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0B0E11 0%, #1a1e24 100%);
+            z-index: 9998;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.6s ease-out, visibility 0.6s ease-out;
+            overflow-y: auto;
+        }
+
+        #login-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .login-container {
+            background: #1e2329;
+            border-radius: 24px;
+            padding: 2rem;
+            width: 100%;
+            max-width: 420px;
+            margin: 1rem;
+            border: 1px solid rgba(252, 213, 53, 0.2);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .binance-yellow-btn { 
+            background-color: #fcd535; 
+            color: #181a20; 
+            transition: all 0.2s;
+        }
+        .binance-yellow-btn:hover { 
+            background-color: #f0c51d; 
+            transform: translateY(-1px);
+        }
+        .input-bg { 
+            background-color: #2b2f36; 
+            border: 1px solid transparent;
+            transition: border-color 0.2s;
+        }
+        .input-bg:focus-within { 
+            border-color: #fcd535; 
+        }
+        .input-bg input {
+            background: transparent;
+            width: 100%;
+            outline: none;
+            color: #eaecef;
+        }
+        
         /* Main Content - Initially hidden */
         #main-site {
             position: fixed;
@@ -102,16 +162,17 @@
             pointer-events: none;
             overflow-y: auto;
             overflow-x: hidden;
+            z-index: 9997;
         }
 
-        .show-site #main-site { 
+        .show-dashboard #main-site { 
             opacity: 1; 
             pointer-events: all;
         }
         
         .hide-loader #loader-wrapper { 
             opacity: 0; 
-            pointer-events: none; 
+            visibility: hidden;
         }
 
         /* ========= ORIGINAL DASHBOARD STYLES (COMPLETELY PRESERVED) ========= */
@@ -157,7 +218,6 @@
         .loading-pulse { animation: pulse 1.5s infinite ease-in-out; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
         
-        /* Ensure main-site scroll works */
         #main-site {
             overflow-y: auto;
             display: block;
@@ -167,6 +227,24 @@
         .max-w-md {
             margin: 0 auto;
             padding-bottom: 80px;
+        }
+
+        /* Success message */
+        .toast-message {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #0ecb81;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: bold;
+            z-index: 10001;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
         }
     </style>
 </head>
@@ -189,6 +267,91 @@
             <span class="letter">N</span>
             <span class="letter">C</span>
             <span class="letter">E</span>
+        </div>
+    </div>
+
+    <!-- LOGIN / SIGNUP OVERLAY (Appears after animation) -->
+    <div id="login-overlay">
+        <div class="login-container">
+            <div class="flex flex-col items-center mb-6">
+                <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" class="mb-3">
+                    <path d="M24 0L33.6 9.6L24 19.2L14.4 9.6L24 0Z" fill="#FCD535"/>
+                    <path d="M33.6 9.6L43.2 19.2L33.6 28.8L24 19.2L33.6 9.6Z" fill="#FCD535"/>
+                    <path d="M24 19.2L33.6 28.8L24 38.4L14.4 28.8L24 19.2Z" fill="#FCD535"/>
+                    <path d="M14.4 9.6L24 19.2L14.4 28.8L4.8 19.2L14.4 9.6Z" fill="#FCD535"/>
+                </svg>
+                <h1 id="page-title" class="text-2xl font-bold text-white">Welcome to Binance</h1>
+                <p class="text-gray-400 text-sm mt-1">Access your trading dashboard</p>
+            </div>
+
+            <div id="login-form">
+                <div class="mb-4">
+                    <label class="block text-sm text-gray-400 mb-2">Email / Phone number</label>
+                    <div class="input-bg rounded-xl p-3 flex items-center">
+                        <i class="fa-regular fa-envelope text-gray-500 mr-3"></i>
+                        <input type="text" id="login-email" placeholder="Email or phone number" class="bg-transparent w-full outline-none text-sm text-white">
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm text-gray-400 mb-2">Password</label>
+                    <div class="input-bg rounded-xl p-3 flex items-center justify-between">
+                        <div class="flex items-center w-full">
+                            <i class="fa-solid fa-lock text-gray-500 mr-3"></i>
+                            <input type="password" id="login-password" placeholder="Enter password" class="bg-transparent w-full outline-none text-sm text-white">
+                        </div>
+                        <i class="fa-regular fa-eye text-gray-500 cursor-pointer" onclick="togglePassword('login-password', this)"></i>
+                    </div>
+                </div>
+
+                <div class="flex items-start mb-6">
+                    <input type="checkbox" id="login-agree" class="mt-1 mr-2 accent-yellow-400">
+                    <span class="text-xs text-gray-400">I agree to Binance's <a href="#" class="text-yellow-400">Terms of Service</a> and <a href="#" class="text-yellow-400">Privacy Notice</a>.</span>
+                </div>
+
+                <button onclick="handleLogin()" class="binance-yellow-btn w-full py-3 rounded-xl font-bold mb-4 transition">Continue to Dashboard</button>
+                <div class="text-center text-gray-500 text-sm mb-4">or</div>
+                <button onclick="toggleForms()" class="w-full border border-gray-600 py-3 rounded-xl font-bold hover:bg-gray-800 transition text-white">Create New Account</button>
+            </div>
+
+            <div id="signup-form" class="hidden">
+                <div class="mb-4">
+                    <label class="block text-sm text-gray-400 mb-2">Email address</label>
+                    <div class="input-bg rounded-xl p-3 flex items-center">
+                        <i class="fa-regular fa-envelope text-yellow-500 mr-3"></i>
+                        <input type="email" id="signup-email" placeholder="Email address" class="bg-transparent w-full outline-none text-sm text-white">
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm text-gray-400 mb-2">Password</label>
+                    <div class="input-bg rounded-xl p-3 flex items-center justify-between">
+                        <div class="flex items-center w-full">
+                            <i class="fa-solid fa-lock text-yellow-500 mr-3"></i>
+                            <input type="password" id="signup-password" placeholder="Create password" class="bg-transparent w-full outline-none text-sm text-white">
+                        </div>
+                        <i class="fa-regular fa-eye text-gray-500 cursor-pointer" onclick="togglePassword('signup-password', this)"></i>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm text-gray-400 mb-2">Referral ID (optional)</label>
+                    <div class="input-bg rounded-xl p-3">
+                        <i class="fa-solid fa-user-plus text-gray-500 mr-3"></i>
+                        <input type="text" id="signup-referral" placeholder="Referral ID" class="bg-transparent w-full outline-none text-sm text-gray-400">
+                    </div>
+                </div>
+
+                <div class="flex items-start mb-6">
+                    <input type="checkbox" id="signup-agree" class="mt-1 mr-2 accent-yellow-400">
+                    <span class="text-xs text-gray-400">By creating an account, I agree to Binance's <a href="#" class="text-yellow-400">Terms of Service</a> and <a href="#" class="text-yellow-400">Privacy Notice</a>.</span>
+                </div>
+
+                <button onclick="handleSignup()" class="binance-yellow-btn w-full py-3 rounded-xl font-bold mb-4 transition">Create Account</button>
+                <p class="text-center text-sm text-gray-400">
+                    Already have an account? <a href="javascript:void(0)" onclick="toggleForms()" class="text-yellow-400 hover:underline">Log in</a>
+                </p>
+            </div>
         </div>
     </div>
 
@@ -231,8 +394,8 @@
                     </div>
                     <div class="flex justify-between items-start">
                         <div>
-                            <h1 class="text-4xl font-black tracking-tight" id="home-main-balance">$0.00</h1>
-                            <p class="success-green text-[11px] font-bold mt-2 flex items-center gap-1">Today's PNL <span class="ml-1">+$0.00 (+0.00%)</span> <i data-lucide="chevron-right" class="w-3 h-3 text-gray-600"></i></p>
+                            <h1 class="text-4xl font-black tracking-tight" id="home-main-balance">$12,450.80</h1>
+                            <p class="success-green text-[11px] font-bold mt-2 flex items-center gap-1">Today's PNL <span class="ml-1">+$342.18 (+2.83%)</span> <i data-lucide="chevron-right" class="w-3 h-3 text-gray-600"></i></p>
                         </div>
                         <button class="bg-binance-yellow text-black px-6 py-2.5 rounded-xl font-black text-sm active:scale-95 transition-all shadow-lg shadow-yellow-500/10">Deposit</button>
                     </div>
@@ -317,10 +480,10 @@
                     <div class="absolute -right-4 -top-4 w-24 h-24 bg-binance-yellow/5 rounded-full blur-2xl"></div>
                     <span class="text-gray-500 text-[11px] font-bold uppercase tracking-widest mb-2 block">Total Equity</span>
                     <div class="flex items-baseline gap-2">
-                        <span class="text-3xl font-black tracking-tighter" id="wallet-main-val">0.00000000</span>
+                        <span class="text-3xl font-black tracking-tighter" id="wallet-main-val">0.18450000</span>
                         <span class="text-sm font-black text-gray-400">BTC</span>
                     </div>
-                    <p class="text-gray-500 text-sm mt-1 font-medium">≈ $0.00</p>
+                    <p class="text-gray-500 text-sm mt-1 font-medium">≈ $12,450.80</p>
                 </div>
                 <div class="grid grid-cols-3 gap-3">
                     <button class="bg-[#2b3139] py-4 rounded-2xl font-black text-xs uppercase tracking-tight active:bg-[#363d47]">Deposit</button>
@@ -353,9 +516,101 @@
         </div>
     </div>
 
+    <div id="toast-message" class="toast-message"></div>
+
     <script>
-        // ========= ORIGINAL SCRIPT (FULL FUNCTIONALITY PRESERVED) =========
         lucide.createIcons();
+        
+        function showToast(msg, isSuccess = true) {
+            const toast = document.getElementById('toast-message');
+            toast.textContent = msg;
+            toast.style.backgroundColor = isSuccess ? '#0ecb81' : '#f6465d';
+            toast.style.opacity = '1';
+            setTimeout(() => {
+                toast.style.opacity = '0';
+            }, 2000);
+        }
+        
+        function handleLogin() {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const agree = document.getElementById('login-agree').checked;
+            
+            if (!email || !password) {
+                showToast('Please enter email and password', false);
+                return;
+            }
+            if (!agree) {
+                showToast('Please agree to the Terms of Service', false);
+                return;
+            }
+            
+            // Successful login - show dashboard
+            showToast('Login successful! Welcome to TrustFunded', true);
+            setTimeout(() => {
+                document.getElementById('login-overlay').classList.remove('active');
+                document.body.classList.add('show-dashboard');
+                document.body.style.overflow = 'auto';
+                document.documentElement.style.overflow = 'auto';
+                lucide.createIcons();
+            }, 500);
+        }
+        
+        function handleSignup() {
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-password').value;
+            const agree = document.getElementById('signup-agree').checked;
+            
+            if (!email || !password) {
+                showToast('Please enter email and password', false);
+                return;
+            }
+            if (password.length < 6) {
+                showToast('Password must be at least 6 characters', false);
+                return;
+            }
+            if (!agree) {
+                showToast('Please agree to the Terms of Service', false);
+                return;
+            }
+            
+            // Successful signup - show dashboard
+            showToast('Account created successfully! Welcome to TrustFunded', true);
+            setTimeout(() => {
+                document.getElementById('login-overlay').classList.remove('active');
+                document.body.classList.add('show-dashboard');
+                document.body.style.overflow = 'auto';
+                document.documentElement.style.overflow = 'auto';
+                lucide.createIcons();
+            }, 500);
+        }
+        
+        function toggleForms() {
+            const loginForm = document.getElementById('login-form');
+            const signupForm = document.getElementById('signup-form');
+            const title = document.getElementById('page-title');
+
+            if (loginForm.classList.contains('hidden')) {
+                loginForm.classList.remove('hidden');
+                signupForm.classList.add('hidden');
+                title.innerText = "Welcome to Binance";
+            } else {
+                loginForm.classList.add('hidden');
+                signupForm.classList.remove('hidden');
+                title.innerText = "Create Account";
+            }
+        }
+        
+        function togglePassword(inputId, icon) {
+            const input = document.getElementById(inputId);
+            if (input.type === "password") {
+                input.type = "text";
+                icon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                input.type = "password";
+                icon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        }
         
         function showView(viewId) {
             document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
@@ -398,7 +653,7 @@
         let isHidden = false;
         function toggleBalance() {
             isHidden = !isHidden;
-            document.getElementById('home-main-balance').innerText = isHidden ? "******" : "$0.00";
+            document.getElementById('home-main-balance').innerText = isHidden ? "******" : "$12,450.80";
             document.getElementById('home-eye-icon').setAttribute('data-lucide', isHidden ? 'eye-off' : 'eye');
             lucide.createIcons();
         }
@@ -406,21 +661,17 @@
         setInterval(updateLiveTicker, 5000);
         updateLiveTicker();
         
-        // ========= LOADER TRANSITION (ORIGINAL TIMING PRESERVED) =========
+        // ========= LOADER TRANSITION: Animation first, THEN login overlay appears =========
         window.addEventListener('load', () => {
             setTimeout(() => {
+                // Hide loader with fade out
                 document.body.classList.add('hide-loader');
-                document.body.classList.add('show-site');
-                // enable scrolling after loader
-                document.body.style.overflow = 'auto';
-                document.documentElement.style.overflow = 'auto';
-            }, 3200); 
+                // After loader fades, show login overlay
+                setTimeout(() => {
+                    document.getElementById('login-overlay').classList.add('active');
+                }, 800);
+            }, 3200); // Animation duration + stagger
         });
-        
-        // small fix to reinitialize icons after loader reveals
-        setTimeout(() => {
-            lucide.createIcons();
-        }, 3400);
     </script>
 </body>
 </html>
